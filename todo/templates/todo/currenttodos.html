@@ -3,5 +3,16 @@
 {% block content %}
 
 <h2>Current ToDos</h2>
-
+<ul>
+  {% for todo in todos %}
+  <li>
+    {% if todo.important %}<b>{% endif %}
+    <a href="{% url 'viewtodo' todo.id %}">
+      <h3>{{ todo.title }}</h3>
+    </a>
+    {% if todo.important %}</b>{% endif %}
+  </li>
+  {% if todo.memo %} <p>{{ todo.memo }}</p> {% endif %}
+  {% endfor %}
+</ul>
 {% endblock %}
