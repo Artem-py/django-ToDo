@@ -5,6 +5,8 @@ from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
 from .forms import ToDoForm
 from .models import ToDo
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
 
 def home(request):
@@ -40,12 +42,14 @@ def loginuser(request):
             return redirect('currenttodos')
 
 
+@login_required
 def logoutuser(request):
     if request.method == 'POST':
         logout(request)
         return redirect('home')
 
 
+@login_required
 def createtodo(request):
     if request.method == 'GET':
         return render(request, 'todo/createtodo.html', {'form': ToDoForm()})
@@ -61,11 +65,19 @@ def createtodo(request):
                 'error': 'Bad data passed in. Try again.'})
 
 
+@login_required
 def currenttodos(request):
     todos = ToDo.objects.filter(user=request.user, datecompleted__isnull=True)
     return render(request, 'todo/currenttodos.html', {'todos': todos})
 
 
+@login_required
+def completedtodos(request):
+    todos = ToDo.objects.filter(user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+    return render(request, 'todo/completedtodos.html', {'todos': todos})
+
+
+@login_required
 def viewtodo(request, todo_pk):
     todo = get_object_or_404(ToDo, pk=todo_pk, user=request.user)
     if request.method == 'GET':
@@ -81,3 +93,18 @@ def viewtodo(request, todo_pk):
                 'error': 'Bad info. Try again.'})
 
 
+@login_required
+def completetodo(request, todo_pk):
+    todo = get_object_or_404(ToDo, pk=todo_pk, user=request.user)
+    if request.method == 'POST':
+        todo.datecompleted = timezone.now()
+        todo.save()
+        return redirect('currenttodos')
+
+
+@login_required
+def deletetodo(request, todo_pk):
+    todo = get_object_or_404(ToDo, pk=todo_pk, user=request.user)
+    if request.method == 'POST':
+        todo.delete()
+        return redirect('currenttodos')
